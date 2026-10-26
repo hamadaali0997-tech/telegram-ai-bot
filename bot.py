@@ -3,32 +3,34 @@ import random
 import asyncio
 from datetime import datetime
 import threading
-requests = __import__('requests')
+import requests
 from google import genai
 from flask import Flask
 
-# إعداد سيرفر ويب وهمي لإرضاء متطلبات منصة Render المجانية
+# 1. إعداد سيرفر ويب وهمي لإرضاء منصة Render
 app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "🤖 Telegram AI Bot is running smoothly!"
+    return "🤖 Ultimate AI Telegram Bot is running smoothly!"
 
 def run_web():
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
 
-# سحب المفاتيح بأمان
+# 2. جلب المفاتيح وإعداد Gemini
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.environ.get("CHAT_ID")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
 client = genai.Client(api_key=GEMINI_API_KEY)
 
-def send_telegram_message(text):
+def send_telegram_message(text, target_chat_id=None):
+    """إرسال رسالة تليجرام"""
+    c_id = target_chat_id or CHAT_ID
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     payload = {
-        "chat_id": CHAT_ID,
+        "chat_id": c_id,
         "text": text,
         "parse_mode": "Markdown"
     }
@@ -38,44 +40,79 @@ def send_telegram_message(text):
     except Exception as e:
         print(f"خطأ في إرسال الرسالة: {e}")
 
-def generate_smart_prompt():
-    prompt = (
-        "أنت صديق ذكي ومقرب ومبرمج محترف. "
-        "مهمتك أن ترسل رسالة قصيرة تفقدية لصديقك (وهو شاب مهتم بالبرمجة وأنظمة لينكس والتقنية). "
-        "نوع في الأساليب: مرة اسأله عن مشروعه البرمجي الحالي، مرة اطرح عليه تحدي برمجي بسيط، ومرة تفقد أحواله بيومه بلطافة. "
-        "اكتب الرسالة باللهجة العامية اللطيفة والمحفزة، وبدون مقدمات طويلة."
+def ask_gemini(prompt_text):
+    """الذكاء الاصطناعي الخارق للرد وتوليد الرسائل"""
+    system_instruction = (
+        "أنت مساعد شخصي ذكي جداً، مبرمج محترف، وصديق مقرب للشاب (مهتم بالبرمجة، لينكس، والتقنية). "
+        "تتحدث باللهجة العامية اللطيفة والمحفزة، أسلوبك ذكي، عميق، وداعم دائماً."
     )
     try:
         response = client.models.generate_content(
             model='gemini-2.5-flash',
-            contents=prompt,
+            contents=f"{system_instruction}\n\nالسياق/الرسالة: {prompt_text}",
         )
         return response.text
     except Exception as e:
         print(f"خطأ في توليد الذكاء الاصطناعي: {e}")
-        return "ها يا وحش، كيف ماشي نهارك؟ شو انجزت اليوم بالبرمجة؟"
+        return "أهلاً يا وحش، معك بس صار فيه خطأ بسيط بالاتصال، عبيّد وراجع!"
 
+# 3. نظام الإشعارات الذكية التلقائية (المبادرة بالتفقد)
 async def smart_scheduler():
-    print("🤖 بوت الاستفقاد الذكي بدأ بالعمل...")
+    print("🤖 نظام التفقد الذكي بدأ بالعمل...")
     while True:
         now = datetime.now()
         current_hour = now.hour
         
         if 10 <= current_hour <= 23:
-            message = generate_smart_prompt()
+            prompt = "ابعث رسالة قصيرة تفقدية لصديقك المبرمج، اسأله عن مشروعه أو ارمِ له فكرة تقنية بلطافة وبدون مقدمات طويلة."
+            message = ask_gemini(prompt)
             send_telegram_message(message)
-            print(f"تم إرسال رسالة تفقدية في الساعة {now.strftime('%H:%M')}")
             
-            wait_time = random.randint(7200, 14400) 
+            wait_time = random.randint(7200, 14400) # بين ساعتين لـ 4 ساعات
             await asyncio.sleep(wait_time)
         else:
             await asyncio.sleep(3600)
 
+# 4. نظام الاستماع والرد الفوري (لما تحكيه)
+def listen_to_telegram():
+    print("👀 نظام الرد الفوري يستمع لرسائلك...")
+    offset = 0
+    while True:
+        try:
+            url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getUpdates?offset={offset}&timeout=30"
+            response = requests.get(url).json()
+            
+            if "result" in response:
+                for update in response["result"]:
+                    offset = update["update_id"] + 1
+                    
+                    if "message" in update and "text" in update["message"]:
+                        user_message = update["message"]["text"]
+                        sender_chat_id = update["message"]["chat"]["id"]
+                        
+                        print(dessert := f"استلمت رسالة: {user_message}")
+                        
+                        # توليد رد ذكي باستخدام Gemini
+                        ai_reply = ask_gemini(user_message)
+                        
+                        # الرد عليك مباشرة
+                        send_telegram_message(ai_reply, sender_chat_id)
+        except Exception as e:
+            print(f"خطأ في استقبال الرسائل: {e}")
+        
+        import time
+        time.sleep(1)
+
 if __name__ == "__main__":
-    # تشغيل سيرفر الويب في خلفية مستقلة لكي لا يغلق البوت
-    t = threading.Thread(target=run_web)
-    t.daemon = True
-    t.start()
+    # تشغيل سيرفر الويب الوهمي
+    t_web = threading.Thread(target=run_web)
+    t_web.daemon = True
+    t_web.start()
     
-    # تشغيل البوت الأساسي
+    # تشغيل نظام الاستماع الفوري للرسائل في خلفية مستقلة
+    t_listener = threading.Thread(target=listen_to_telegram)
+    t_listener.daemon = True
+    t_listener.start()
+    
+    # تشغيل المجدول الذكي للإشعارات
     asyncio.run(smart_scheduler())
