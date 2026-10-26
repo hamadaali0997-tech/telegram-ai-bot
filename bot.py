@@ -47,9 +47,9 @@ def ask_gemini(prompt_text):
         "تتحدث باللهجة العامية اللطيفة والمحفزة، أسلوبك ذكي، عميق، وداعم دائماً."
     )
     try:
-        # استخدام الموديل المستقر تماماً لتجنب الضغط
+        # استخدام الموديل القياسي المتوافق 100% مع مكتبة google-genai الحديثة
         response = client.models.generate_content(
-            model='gemini-1.5-flash',
+            model='gemini-2.0-flash',
             contents=f"{system_instruction}\n\nالسياق/الرسالة: {prompt_text}"
         )
         return response.text
