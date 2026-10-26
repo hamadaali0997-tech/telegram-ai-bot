@@ -7,7 +7,7 @@ import requests
 from google import genai
 from flask import Flask
 
-# 1. إعداد سيرفر ويب وهمي لإرضاء منصة Render
+# 1. إعداد سيرفر ويب وهمي لإرضاء منصة Render المجانية
 app = Flask(__name__)
 
 @app.route('/')
@@ -41,7 +41,7 @@ def send_telegram_message(text, target_chat_id=None):
         print(f"خطأ في إرسال الرسالة: {e}")
 
 def ask_gemini(prompt_text):
-    """الذكاء الاصطناعي الخارق للرد وتوليد الرسائل"""
+    """الذكاء الاصطناعي للرد وتوليد الرسائل بأسلوب ذكي ومقرب"""
     system_instruction = (
         "أنت مساعد شخصي ذكي جداً، مبرمج محترف، وصديق مقرب للشاب (مهتم بالبرمجة، لينكس، والتقنية). "
         "تتحدث باللهجة العامية اللطيفة والمحفزة، أسلوبك ذكي، عميق، وداعم دائماً."
@@ -49,12 +49,12 @@ def ask_gemini(prompt_text):
     try:
         response = client.models.generate_content(
             model='gemini-2.5-flash',
-            contents=f"{system_instruction}\n\nالسياق/الرسالة: {prompt_text}",
+            contents=f"{system_instruction}\n\nالسياق/الرسالة: {prompt_text}"
         )
         return response.text
     except Exception as e:
-        print(f"خطأ في توليد الذكاء الاصطناعي: {e}")
-        return "أهلاً يا وحش، معك بس صار فيه خطأ بسيط بالاتصال، عبيّد وراجع!"
+        print(f"خطأ تفصيلي في توليد الذكاء الاصطناعي: {e}")
+        return f"عذراً يا وحش، صار في خطأ تقني بسيط: {str(e)[:50]}"
 
 # 3. نظام الإشعارات الذكية التلقائية (المبادرة بالتفقد)
 async def smart_scheduler():
@@ -73,7 +73,7 @@ async def smart_scheduler():
         else:
             await asyncio.sleep(3600)
 
-# 4. نظام الاستماع والرد الفوري (لما تحكيه)
+# 4. نظام الاستماع والرد الفوري (عندما تكلم البوت)
 def listen_to_telegram():
     print("👀 نظام الرد الفوري يستمع لرسائلك...")
     offset = 0
@@ -90,12 +90,12 @@ def listen_to_telegram():
                         user_message = update["message"]["text"]
                         sender_chat_id = update["message"]["chat"]["id"]
                         
-                        print(dessert := f"استلمت رسالة: {user_message}")
+                        print(f"استلمت رسالة: {user_message}")
                         
                         # توليد رد ذكي باستخدام Gemini
                         ai_reply = ask_gemini(user_message)
                         
-                        # الرد عليك مباشرة
+                        # الرد عليك مباشرة على نفس الشات
                         send_telegram_message(ai_reply, sender_chat_id)
         except Exception as e:
             print(f"خطأ في استقبال الرسائل: {e}")
@@ -104,7 +104,7 @@ def listen_to_telegram():
         time.sleep(1)
 
 if __name__ == "__main__":
-    # تشغيل سيرفر الويب الوهمي
+    # تشغيل سيرفر الويب الوهمي لإرضاء Render
     t_web = threading.Thread(target=run_web)
     t_web.daemon = True
     t_web.start()
