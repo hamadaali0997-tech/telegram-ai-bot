@@ -54,7 +54,7 @@ def ask_gemini(prompt_text):
         return response.text
     except Exception as e:
         print(f"خطأ تفصيلي في توليد الذكاء الاصطناعي: {e}")
-        return f"عذراً يا وحش، صار في خطأ تقني بسيط: {str(e)[:50]}"
+        return f"يا وحش، صار في خطأ تقني بالذكاء الاصطناعي: {str(e)}"
 
 # 3. نظام الإشعارات الذكية التلقائية (المبادرة بالتفقد)
 async def smart_scheduler():
