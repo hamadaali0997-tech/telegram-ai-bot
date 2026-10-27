@@ -5,20 +5,8 @@ from datetime import datetime
 import threading
 import requests
 from google import genai
-from flask import Flask
 
-# 1. إعداد سيرفر ويب وهمي لإرضاء منصة Render المجانية
-app = Flask(__name__)
-
-@app.route('/')
-def home():
-    return "🤖 Ultimate AI Telegram Bot is running smoothly!"
-
-def run_web():
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
-
-# 2. جلب المفاتيح وإعداد Gemini
+# جلب المفاتيح وإعداد Gemini
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.environ.get("CHAT_ID")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
@@ -47,9 +35,8 @@ def ask_gemini(prompt_text):
         "تتحدث باللهجة العامية اللطيفة والمحفزة، أسلوبك ذكي، عميق، وداعم دائماً."
     )
     try:
-        # استخدام الموديل الإجباري المعتمد من جوجل بناءً على رسالة الخطأ الأخيرة
         response = client.models.generate_content(
-            model='gemini-3.8-flash',
+            model='gemini-2.0-flash',
             contents=f"{system_instruction}\n\nالسياق/الرسالة: {prompt_text}"
         )
         return response.text
@@ -57,7 +44,7 @@ def ask_gemini(prompt_text):
         print(f"خطأ تفصيلي في توليد الذكاء الاصطناعي: {e}")
         return f"يا وحش، صار في خطأ تقني بالذكاء الاصطناعي: {str(e)}"
 
-# 3. نظام الإشعارات الذكية التلقائية (المبادرة بالتفقد)
+# نظام الإشعارات الذكية التلقائية (المبادرة بالتفقد)
 async def smart_scheduler():
     print("🤖 نظام التفقد الذكي بدأ بالعمل...")
     while True:
@@ -74,7 +61,7 @@ async def smart_scheduler():
         else:
             await asyncio.sleep(3600)
 
-# 4. نظام الاستماع والرد الفوري (عندما تكلم البوت)
+# نظام الاستماع والرد الفوري (عندما تكلم البوت)
 def listen_to_telegram():
     print("👀 نظام الرد الفوري يستمع لرسائلك...")
     offset = 0
@@ -105,11 +92,6 @@ def listen_to_telegram():
         time.sleep(1)
 
 if __name__ == "__main__":
-    # تشغيل سيرفر الويب الوهمي لإرضاء Render
-    t_web = threading.Thread(target=run_web)
-    t_web.daemon = True
-    t_web.start()
-    
     # تشغيل نظام الاستماع الفوري للرسائل في خلفية مستقلة
     t_listener = threading.Thread(target=listen_to_telegram)
     t_listener.daemon = True
